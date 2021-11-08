@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/BRB3D/tinyapp/issues"
   },
-  "homepage": "https://github.com/BRB3D/tinyapp#readme"
+  "homepage": "https://github.com/BRB3D/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
