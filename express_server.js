@@ -37,15 +37,16 @@ app.get('/urls/new', (req, res) => {
 
 //post request from urls_new.ejs. this handles with the response from that post form.
 app.post("/urls", (req, res) => {
+  const templateVars = urlDatabase;
   let short = generateRandomString();
-  while (Object.values(urlDatabase).indexOf(short) > -1) {//while loopn ensures a unique key
+  while (Object.values(templateVars).indexOf(short) > -1) {//while loopn ensures a unique key
     short = generateRandomString();
   }
-  if (Object.values(urlDatabase).indexOf(req.body.longURL) === -1) {//if value is not repeated in the database it will be added with the unique token.
+  if (Object.values(templateVars).indexOf(req.body.longURL) === -1) {//if value is not repeated in the database it will be added with the unique token.
     urlDatabase[short] = req.body.longURL;
   } else {
-    for (let keys in urlDatabase) {//if the value exists then the value from the database takes precedent.
-      if (urlDatabase[keys] === req.body.longURL) {
+    for (let keys in templateVars) {//if the value exists then the value from the database takes precedent.
+      if (templateVars[keys] === req.body.longURL) {
         short = keys;
       }
     }
@@ -53,10 +54,24 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${short}`);
 });
 
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const templateVars = urlDatabase;
+  if (templateVars[req.params.shortURL]) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  } else {
+    res.send('That value is not in our Database, but nice try.');
+  }
+
+
+});
+
 app.get("/u/:shortURL", (req, res) => {
   let long;
-  if (urlDatabase[req.params.shortURL]) {
-    long = urlDatabase[req.params.shortURL];
+  const templateVars = urlDatabase;
+  if (templateVars [req.params.shortURL]) {
+    long = templateVars [req.params.shortURL];
   }
   res.redirect(long);
 });
