@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 
-app.set('view engine', 'ejs'); 
+app.set('view engine', 'ejs');
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -19,32 +19,34 @@ app.get('/', (req, res) => {
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
+
 app.get('/urls', (req, res) => {
-  const templateVars = {urls: urlDatabase}; 
-  res.render('urls_index', templateVars)
-})
+  const templateVars = {urls: urlDatabase};
+  res.render('urls_index', templateVars);
+});
+
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hellow <b>World</b></body></html>\n');
 });
 
-//new route to render a form for new urls, this must be declared before /urls/:shortURL or the calls to /urls/new will be handled by /urls/:shortURL. 
+//new route to render a form for new urls, this must be declared before /urls/:shortURL or the calls to /urls/new will be handled by /urls/:shortURL.
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new')
-})
+  res.render('urls_new');
+});
 
 
-//post request from urls_new.ejs. this handles with the response from that post form. 
+//post request from urls_new.ejs. this handles with the response from that post form.
 app.post("/urls", (req, res) => {
   let short = generateRandomString();
-  while (Object.values(urlDatabase).indexOf(short) > -1) {
+  while (Object.values(urlDatabase).indexOf(short) > -1) {//while loopn ensures a unique key
     short = generateRandomString();
   }
-  if (Object.values(urlDatabase).indexOf(req.body.longURL) === -1) {  
-      urlDatabase[short] = req.body.longURL; 
+  if (Object.values(urlDatabase).indexOf(req.body.longURL) === -1) {//if value is not repeated in the database it will be added with the unique token.
+    urlDatabase[short] = req.body.longURL;
   } else {
-    for (let keys in urlDatabase) {
+    for (let keys in urlDatabase) {//if the value exists then the value from the database takes precedent.
       if (urlDatabase[keys] === req.body.longURL) {
-        short = keys; 
+        short = keys;
       }
     }
   }
@@ -59,6 +61,13 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  let long;
+  if (urlDatabase[req.params.shortURL]) {
+    long = urlDatabase[req.params.shortURL];
+  }
+  res.redirect(long);
+});
 
 
 app.listen(PORT, () => {
@@ -69,11 +78,11 @@ app.listen(PORT, () => {
 
 
 //function that generates a random tinyUrl
-function generateRandomString() {
-    let result = '';
-    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
-    while (result.length < 6) {
-        result += characters.charAt(Math.floor(Math.random() * 62));
-    }
-    return result;
-}
+let generateRandomString = function() {
+  let result = '';
+  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+  while (result.length < 6) {
+    result += characters.charAt(Math.floor(Math.random() * 62));
+  }
+  return result;
+};
