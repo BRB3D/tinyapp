@@ -54,15 +54,13 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${short}`);
 });
 
-
+//deletes the value from the Database
 app.post("/urls/:shortURL/delete", (req, res) => {
   const templateVars = urlDatabase;
-  if (templateVars[req.params.shortURL]) {
+  if (templateVars.hasOwnProperty(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
-  } else {
-    res.send('That value is not in our Database, but nice try.');
-  }
+  } 
 });
 
 app.post("/urls/:shortURL", (req, res) => {
