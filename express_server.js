@@ -50,15 +50,7 @@ app.post("/urls", (req, res) => {
       }
     }
   }
-  
-  
-  res.render('urls_show', {shortURL: short, longURL: urlDatabase[short]});         // Respond with 'Ok' (we will replace this)
-});
-
-//new route to render urls_show,ejs template.
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`]};
-  res.render("urls_show", templateVars);
+  res.redirect(`/urls/${short}`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -69,6 +61,12 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(long);
 });
 
+
+//new route to render urls_show,ejs template.
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`]};
+  res.render("urls_show", templateVars);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
