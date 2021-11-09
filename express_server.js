@@ -32,11 +32,25 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new')
 })
 
+
+//post request from urls_new.ejs. this handles with the response from that post form. 
 app.post("/urls", (req, res) => {
-
-
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let short = generateRandomString();
+  while (Object.values(urlDatabase).indexOf(short) > -1) {
+    short = generateRandomString();
+  }
+  if (Object.values(urlDatabase).indexOf(req.body.longURL) === -1) {  
+      urlDatabase[short] = req.body.longURL; 
+  } else {
+    for (let keys in urlDatabase) {
+      if (urlDatabase[keys] === req.body.longURL) {
+        short = keys; 
+      }
+    }
+  }
+  
+  
+  res.render('urls_show', {shortURL: short, longURL: urlDatabase[short]});         // Respond with 'Ok' (we will replace this)
 });
 
 //new route to render urls_show,ejs template.
