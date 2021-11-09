@@ -32,6 +32,13 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new')
 })
 
+app.post("/urls", (req, res) => {
+
+
+  console.log(req.body);  // Log the POST request body to the console
+  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
+
 //new route to render urls_show,ejs template.
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`]};
@@ -43,3 +50,16 @@ app.get("/urls/:shortURL", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
+
+
+//function that generates a random tinyUrl
+function generateRandomString() {
+    let result = '';
+    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+    while (result.length < 6) {
+        result += characters.charAt(Math.floor(Math.random() * 62));
+    }
+    return result;
+}
