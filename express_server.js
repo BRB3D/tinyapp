@@ -63,9 +63,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   } else {
     res.send('That value is not in our Database, but nice try.');
   }
-
-
 });
+
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.updatedURL
+  res.redirect("/urls");
+});
+
 
 app.get("/u/:shortURL", (req, res) => {
   let long;
