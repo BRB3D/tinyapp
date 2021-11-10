@@ -49,7 +49,7 @@ app.get("/register", (req, res) => {
   res.render("urls_registration");
 });
 
-//*RENDER urls_show,ejs 
+//*RENDER urls_show,ejs
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`], username: req.cookies['username']};
   res.render("urls_show", templateVars);
@@ -74,7 +74,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${short}`);
 });
 
-//RDIRECTS to Actual web page if it extists. 
+//RDIRECTS to Actual web page if it extists.
 app.get("/u/:shortURL", (req, res) => {
   let long;
   const templateVars = urlDatabase;
@@ -107,7 +107,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-//POST from url_show.jes and deals with edditing the long URL
+//POST from url_show.jes and deals with edditing the long URL ****************
 app.post("/urls/:shortURL", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.updatedURL;
   res.redirect("/urls");
