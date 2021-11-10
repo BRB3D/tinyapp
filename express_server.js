@@ -9,11 +9,13 @@ app.set('view engine', 'ejs');
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 
+// ----------------------- ShortURL & LongURL Database---------------//
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-
+//----------------------- User registration Database ---------------------//
+const users = {};
 //---------------------------------------//
 
 app.get('/', (req, res) => {
@@ -41,11 +43,10 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new', templateVars);
 });
 
-//--------------------------------------------------------------------------------------------//
 
 //*RENDER urls_registration.
 app.get("/register", (req, res) => {
-
+  
   res.render("urls_registration");
 });
 
@@ -54,6 +55,8 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`], username: req.cookies['username']};
   res.render("urls_show", templateVars);
 });
+
+//--------------------------------------------------------------------------------------------//
 
 //POST from urls_new.ejs creates random string and rediredts to /urls/shortURL ***************
 app.post("/urls", (req, res) => {
@@ -83,6 +86,29 @@ app.get("/u/:shortURL", (req, res) => {
   }
   res.redirect(long);
 });
+
+//POST from /register stores or checks users in database ****************
+app.post('/register', (req, res) => {
+  const id = generateRandomString();
+  const userVars = users;
+  while (Object.values(userVars).indexOf(id) > -1) {//while loop ensures a unique Id
+    id = generateRandomString();
+  }
+  const email = req.body.email;
+  const password = req.body.password;
+  const userWithId = { 
+      id,
+      email, 
+      password,
+  }
+  if (!userVars.hasOwnProperty(id)) {
+    userVars[id] = userWithId;
+    console.log(users)
+    res.cookie('user_id', id);
+    res.redirect('/urls');
+  }
+
+})
 
 
 //POST from login ****************
