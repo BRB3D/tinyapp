@@ -15,11 +15,13 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 //----------------------- User registration Database ---------------------//
-const users = { "userRandomID": {
-  id: "userRandomID",
-  email: "user@example.com",
-  password: "purple-monkey-dinosaur"
-},};
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+};
 //---------------------------------------//
 
 app.get('/', (req, res) => {
@@ -93,13 +95,19 @@ app.get("/u/:shortURL", (req, res) => {
 
 //POST from /register stores or checks users in database ****************
 app.post('/register', (req, res) => {
+  if (!req.body.password || !req.body.email) {
+    return res.status(400).send('Password or Email empty');
+  }
   let id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!checkEmail(email)) {
+    return res.status(400).send('Email already exists. Dont be cheeky');
+  }
   const userVars = users;
   while (Object.values(userVars).indexOf(id) > -1) {//while loop ensures a unique Id
     id = generateRandomString();
   }
-  const email = req.body.email;
-  const password = req.body.password;
   const userWithId = {
     id,
     email,
@@ -152,11 +160,23 @@ app.listen(PORT, () => {
 
 
 //function that generates a random tinyUrl
-let generateRandomString = function() {
+const generateRandomString = function() {
   let result = '';
   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
   while (result.length < 6) {
     result += characters.charAt(Math.floor(Math.random() * 62));
   }
   return result;
+};
+
+const checkEmail = function(newEmail) {
+  if (Object.keys(users).length === 0) {
+    return true;
+  }
+  for (let keys in users) {
+    if (users[keys].email === newEmail) {
+      return false;
+    }
+  }
+  return true;
 };
