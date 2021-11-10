@@ -2,10 +2,12 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+const cookieParser = require('cookie-parser');
 
 
 app.set('view engine', 'ejs');
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -63,12 +65,20 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   } 
 });
 
+//recieves data from url_show.jes and deals with edditing the long URL
 app.post("/urls/:shortURL", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.updatedURL
   res.redirect("/urls");
 });
 
+//Deals with username handling.
+app.post('/login', (req, res) => {
+  const userName = req.body.username;
+  res.cookie('name', userName,)
+  res.redirect('/urls');
+})
 
+//redirects to the long URL
 app.get("/u/:shortURL", (req, res) => {
   let long;
   const templateVars = urlDatabase;
