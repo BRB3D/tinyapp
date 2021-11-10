@@ -14,6 +14,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//---------------------------------------//
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -22,18 +24,28 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get('/urls', (req, res) => {
-  const templateVars = {urls: urlDatabase};
-  res.render('urls_index', templateVars);
-});
-
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hellow <b>World</b></body></html>\n');
 });
 
+app.get('/urls', (req, res) => {
+  const templateVars = {urls: urlDatabase, username: req.cookies['username']};
+  res.render('urls_index', templateVars);
+});
+
+
 //new route to render a form for new urls, this must be declared before /urls/:shortURL or the calls to /urls/new will be handled by /urls/:shortURL.
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = {username: req.cookies['username']};
+  res.render('urls_new', templateVars);
+});
+
+//--------------------------------------------------------------------------------------------//
+
+//new route to render urls_show,ejs template.
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`], username: req.cookies['username']};
+  res.render("urls_show", templateVars);
 });
 
 
@@ -56,44 +68,48 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${short}`);
 });
 
-//deletes the value from the Database
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const templateVars = urlDatabase;
-  if (templateVars.hasOwnProperty(req.params.shortURL)) {
-    delete urlDatabase[req.params.shortURL];
-    res.redirect('/urls');
-  } 
-});
-
-//recieves data from url_show.jes and deals with edditing the long URL
-app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.updatedURL
-  res.redirect("/urls");
-});
-
-//Deals with username handling.
-app.post('/login', (req, res) => {
-  const userName = req.body.username;
-  res.cookie('name', userName,)
-  res.redirect('/urls');
-})
-
 //redirects to the long URL
 app.get("/u/:shortURL", (req, res) => {
   let long;
   const templateVars = urlDatabase;
-  if (templateVars [req.params.shortURL]) {
+  if (templateVars[req.params.shortURL]) {
     long = templateVars [req.params.shortURL];
   }
   res.redirect(long);
 });
 
 
-//new route to render urls_show,ejs template.
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`]};
-  res.render("urls_show", templateVars);
+//Deals with username handling.
+app.post('/login', (req, res) => {
+  const userName = req.body.username;
+  res.cookie('username', userName,);
+  res.redirect('/urls');
 });
+
+//Deals with username handling.
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
+//deletes the value from the Database
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const templateVars = urlDatabase;
+  if (templateVars.hasOwnProperty(req.params.shortURL)) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  }
+});
+
+//recieves data from url_show.jes and deals with edditing the long URL
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.updatedURL;
+  res.redirect("/urls");
+});
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
