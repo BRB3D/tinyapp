@@ -17,9 +17,11 @@
       <button type="submit" name="logout" class="btn btn-success">Logout</button>
     </form>
     <% } else { %>
-    <form class="form-inline" action="/login" method="POST">
-        <input class="form-control" type="text" name="username" placeholder="username" style="width: 300px; margin: 1em">
-        <button type="submit" class="btn btn-success">Submit</button>
+    <form class="form-inline" action="/login" method="GET">
+        <button class="btn btn-success">Login</button>
+    </form>
+    <form class="form-inline" action="/register" method="GET">
+        <button class="btn btn-success">Register</button>
     </form>
     <% } %>
   </nav>

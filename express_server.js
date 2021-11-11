@@ -56,6 +56,12 @@ app.get("/register", (req, res) => {
   res.render("urls_registration");
 });
 
+//*RENDER ursl_login
+app.get('/login', (req,res) => {
+
+  res.render('urls_login');
+})
+
 //*RENDER urls_show,ejs
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`], user: users[req.cookies['user_id']]};
@@ -121,8 +127,9 @@ app.post('/register', (req, res) => {
 
 //POST from login ****************
 app.post('/login', (req, res) => {
-  const id = req.body.username;
-  console.log(id);
+  console.log(req.body);
+  const email = req.body.email;
+  const password = req.body.password;
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
@@ -144,6 +151,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //POST from url_show.jes and deals with edditing the long URL ****************
 app.post("/urls/:shortURL", (req, res) => {
+  for (let keys in urlDatabase) {
+    console.log(urlDatabase[keys]);
+  if (urlDatabase[keys] === req.body.updatedURL ) {
+   return  res.redirect('/urls');
+  }
+};
   urlDatabase[req.params.shortURL] = req.body.updatedURL;
   res.redirect("/urls");
 });
