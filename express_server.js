@@ -41,8 +41,15 @@ app.get('/urls', (req, res) => {
   if (req.cookies['user_id'] && users[req.cookies['user_id']] === undefined) {
     res.clearCookie('user_id');
     res.redirect('/login');
+    return;
   }
-  const templateVars = {urls: urlDatabase, user: users[req.cookies['user_id']]};
+  if (!req.cookies['user_id']) {
+    res.render('urls_index', {urls: null , user: null});
+    return;
+  }
+  let id = req.cookies['user_id'];
+  const templateVars = {urls: urlsForUser(id), user: users[id]};
+
   res.render('urls_index', templateVars);
 });
 
@@ -51,6 +58,7 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   if (!req.cookies['user_id']) {
     res.redirect('/login');
+    return;
   }
   const templateVars = {user: users[req.cookies['user_id']]};
   res.render('urls_new', templateVars);
@@ -61,14 +69,14 @@ app.get('/urls/new', (req, res) => {
 app.get("/register", (req, res) => {
   if (req.cookies['user_id']) {
     return  res.redirect('/urls');
-    }
+  }
   res.render("urls_registration");
 });
 
 //*RENDER ursl_login
 app.get('/login', (req,res) => {
   if (req.cookies['user_id']) {
-  return  res.redirect('/urls');
+    return  res.redirect('/urls');
   }
 
   res.render('urls_login');
@@ -76,7 +84,16 @@ app.get('/login', (req,res) => {
 
 //*RENDER urls_show,ejs
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[`${req.params.shortURL}`].longURL, user: users[req.cookies['user_id']]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies['user_id']]};
+  const userUrls = Object.keys(urlsForUser(req.cookies['user_id']));
+  if (!req.cookies['user_id']) {
+    templateVars.user = null;
+    res.status(401).send('Loggin or resgitser before accesing');
+    return;
+  }
+  if (!userUrls.includes(req.params.shortURL)) {
+    res.status(401).send('You are not autorized.');
+  }
   res.render("urls_show", templateVars);
 });
 
@@ -86,10 +103,12 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   if (!req.cookies['user_id']) {
     res.status(400).send(`Dont be cheeky`);
+    return;
   }
-  const templateVars = urlDatabase;
+  let id = req.cookies['user_id'];
+  const templateVars = urlsForUser(id);
   let short = generateRandomString();
-  while (Object.values(templateVars).indexOf(short) > -1) {//while loop ensures a unique key
+  while (Object.keys(templateVars).indexOf(short) > -1) {//while loop ensures a unique key
     short = generateRandomString();
   }
   for (let keys in templateVars) {//if the value exists then the value from the database takes precedent.
@@ -106,28 +125,27 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   let long;
   const templateVars = urlDatabase;
-  if(!templateVars[req.params.shortURL]) {
+  if (!templateVars[req.params.shortURL]) {
     res.status(400).send(`${req.params.shortURL} doesnt exist`);
+    return;
   }
   if (templateVars[req.params.shortURL]) {
     long = templateVars[req.params.shortURL].longURL;
   }
-  res.redirect(long);
+  return res.redirect(long);
 });
 
 //POST from /register stores or checks users in database ****************
 app.post('/register', (req, res) => {
+  let id = generateRandomString();
+  const {email, password} = req.body;
   if (!req.body.password || !req.body.email) {
     return res.status(400).send('Password or Email empty');
   }
-  let id = generateRandomString();
-  const email = req.body.email;
-  const password = req.body.password;
   if (typeof checkEmail(email) === 'object') {
     return res.status(400).send(`Email ${email} already exists. Dont be cheeky`);
   }
-  const userVars = users;
-  while (Object.values(userVars).indexOf(id) > -1) {//while loop ensures a unique Id
+  while (Object.keys(users).indexOf(id) > -1) {//while loop ensures a unique Id
     id = generateRandomString();
   }
   const userWithId = {
@@ -170,9 +188,12 @@ app.post('/logout', (req, res) => {
 
 //POST deletes the value from the Database ********************
 app.post("/urls/:shortURL/delete", (req, res) => {
-
-  const templateVars = urlDatabase;
-  if (templateVars.hasOwnProperty(req.params.shortURL)) {
+  const id = req.cookies['user_id'];
+  if (!id) {
+    res.status(401).send('Stop, its a trap!!!');
+  }
+  const userUrls = Object.keys(urlsForUser(id));
+  if (userUrls.includes(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
   }
@@ -180,13 +201,14 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //POST from url_show.jes and deals with edditing the long URL ****************
 app.post("/urls/:shortURL", (req, res) => {
-  for (let keys in urlDatabase) {
-    if (urlDatabase[keys].longURL === req.body.updatedURL) {
-      return  res.redirect('/urls');
-    }
+  const userUrls = Object.keys(urlsForUser(req.cookies['user_id']));
+  if (userUrls.includes(req.params.shortURL)) {
+    urlDatabase[req.params.shortURL] = {longURL: req.body.updatedURL, userID: req.cookies['user_id']};
+    res.redirect('/urls');
   }
-  urlDatabase[req.params.shortURL] = {longURL: req.body.updatedURL, userID: req.cookies['user_id']};
-  res.redirect("/urls");
+  if (!req.cookies['user_id'] || !userUrls.includes(req.params.shortURL)) {
+    res.status(401).send('Not Authorized');
+  }
 });
 
 
@@ -202,12 +224,7 @@ app.listen(PORT, () => {
 
 //function that generates a random tinyUrl
 const generateRandomString = function() {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
-  while (result.length < 6) {
-    result += characters.charAt(Math.floor(Math.random() * 62));
-  }
-  return result;
+  return Math.random().toString(36).substr(2,6);
 };
 
 const checkEmail = function(newEmail) {
@@ -217,4 +234,14 @@ const checkEmail = function(newEmail) {
     }
   }
   return true;
+};
+
+const urlsForUser = function(logID) {
+  const urls = {};
+  for (let keys in urlDatabase) {
+    if (urlDatabase[keys].userID === logID) {
+      urls[keys] = urlDatabase[keys];
+    }
+  }
+  return urls;
 };
