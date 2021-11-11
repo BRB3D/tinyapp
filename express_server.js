@@ -60,7 +60,7 @@ app.get("/register", (req, res) => {
 app.get('/login', (req,res) => {
 
   res.render('urls_login');
-})
+});
 
 //*RENDER urls_show,ejs
 app.get("/urls/:shortURL", (req, res) => {
@@ -107,8 +107,9 @@ app.post('/register', (req, res) => {
   let id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  if (!checkEmail(email)) {
-    return res.status(400).send('Email already exists. Dont be cheeky');
+  console.log(checkEmail(email));
+  if (typeof checkEmail(email) === 'object') {
+    return res.status(400).send(`Email ${email} already exists. Dont be cheeky`);
   }
   const userVars = users;
   while (Object.values(userVars).indexOf(id) > -1) {//while loop ensures a unique Id
@@ -127,11 +128,19 @@ app.post('/register', (req, res) => {
 
 //POST from login ****************
 app.post('/login', (req, res) => {
-  console.log(req.body);
   const email = req.body.email;
   const password = req.body.password;
-  res.cookie('user_id', id);
-  res.redirect('/urls');
+  if (typeof checkEmail(email) === 'object') {
+    let key = checkEmail(email);
+    if (key.password === password) {
+      let id = key.id;
+      res.cookie('user_id', id);
+      res.redirect('/urls');
+      return;
+    }
+    return res.status(403).send(`Password doesnt match`);
+  }
+  return res.status(403).send(`This email: ${email} cannot be found`);
 });
 
 //POST from logout *****************
@@ -153,10 +162,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   for (let keys in urlDatabase) {
     console.log(urlDatabase[keys]);
-  if (urlDatabase[keys] === req.body.updatedURL ) {
-   return  res.redirect('/urls');
+    if (urlDatabase[keys] === req.body.updatedURL) {
+      return  res.redirect('/urls');
+    }
   }
-};
   urlDatabase[req.params.shortURL] = req.body.updatedURL;
   res.redirect("/urls");
 });
@@ -183,12 +192,9 @@ const generateRandomString = function() {
 };
 
 const checkEmail = function(newEmail) {
-  if (Object.keys(users).length === 0) {
-    return true;
-  }
   for (let keys in users) {
     if (users[keys].email === newEmail) {
-      return false;
+      return users[keys];
     }
   }
   return true;
