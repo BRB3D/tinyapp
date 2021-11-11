@@ -106,6 +106,9 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   let long;
   const templateVars = urlDatabase;
+  if(!templateVars[req.params.shortURL]) {
+    res.status(400).send(`${req.params.shortURL} doesnt exist`);
+  }
   if (templateVars[req.params.shortURL]) {
     long = templateVars[req.params.shortURL].longURL;
   }
