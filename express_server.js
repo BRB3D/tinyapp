@@ -19,7 +19,7 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "1"
   },
 };
 //---------------------------------------//
@@ -45,6 +45,9 @@ app.get('/urls', (req, res) => {
 
 //*RENDER New URLS this must be declared before /urls/:shortURL or the calls to /urls/new will be handled by /urls/:shortURL.
 app.get('/urls/new', (req, res) => {
+  if (!req.cookies['user_id']) {
+    res.redirect('/login');
+  }
   const templateVars = {user: users[req.cookies['user_id']]};
   res.render('urls_new', templateVars);
 });
@@ -52,12 +55,17 @@ app.get('/urls/new', (req, res) => {
 
 //*RENDER urls_registration.
 app.get("/register", (req, res) => {
-  
+  if (req.cookies['user_id']) {
+    return  res.redirect('/urls');
+    }
   res.render("urls_registration");
 });
 
 //*RENDER ursl_login
 app.get('/login', (req,res) => {
+  if (req.cookies['user_id']) {
+  return  res.redirect('/urls');
+  }
 
   res.render('urls_login');
 });
@@ -72,6 +80,9 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //POST from urls_new.ejs creates random string and rediredts to /urls/shortURL ***************
 app.post("/urls", (req, res) => {
+  if (!req.cookies['user_id']) {
+    res.status(400).send(`Dont be cheeky`);
+  }
   const templateVars = urlDatabase;
   let short = generateRandomString();
   while (Object.values(templateVars).indexOf(short) > -1) {//while loopn ensures a unique key
@@ -107,7 +118,6 @@ app.post('/register', (req, res) => {
   let id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  console.log(checkEmail(email));
   if (typeof checkEmail(email) === 'object') {
     return res.status(400).send(`Email ${email} already exists. Dont be cheeky`);
   }
@@ -151,6 +161,7 @@ app.post('/logout', (req, res) => {
 
 //POST deletes the value from the Database ********************
 app.post("/urls/:shortURL/delete", (req, res) => {
+
   const templateVars = urlDatabase;
   if (templateVars.hasOwnProperty(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
@@ -161,7 +172,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //POST from url_show.jes and deals with edditing the long URL ****************
 app.post("/urls/:shortURL", (req, res) => {
   for (let keys in urlDatabase) {
-    console.log(urlDatabase[keys]);
     if (urlDatabase[keys] === req.body.updatedURL) {
       return  res.redirect('/urls');
     }
