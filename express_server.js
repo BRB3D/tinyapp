@@ -21,18 +21,18 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "1"
+    password: bcrypt.hashSync("1", 10),
   },
 };
 //---------------------------------------//
 
 app.get('/', (req, res) => {
-  if(!req.cookies['user_id']) {
+  if (!req.cookies['user_id']) {
     res.redirect('/login');
     return;
   }
   if (req.cookies['user_id'] && users[req.cookies['user_id']])
-  res.redirect('/urls');
+    res.redirect('/urls');
 });
 
 app.get('/urls.json', (req, res) => {
@@ -157,7 +157,6 @@ app.post('/register', (req, res) => {
     password: bcrypt.hashSync(password, 10),
   };
   users[id] = userWithId;
-  console.log(users);
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
@@ -209,7 +208,7 @@ app.post("/urls/:shortURL", (req, res) => {
   const userUrls = urlsForUser(req.cookies['user_id']);
   if (Object.keys(userUrls).includes(req.params.shortURL)) {
     for (let url in userUrls) {
-      if(userUrls[url].longURL === req.body.updatedURL) {
+      if (userUrls[url].longURL === req.body.updatedURL) {
         res.redirect('/urls');
         return;
       }
@@ -222,7 +221,7 @@ app.post("/urls/:shortURL", (req, res) => {
     res.status(401).send('Not Authorized');
     return;
   }
-  res.redirect('/urls')
+  res.redirect('/urls');
   return;
 });
 
