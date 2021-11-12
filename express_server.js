@@ -3,6 +3,8 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+
 
 
 app.set('view engine', 'ejs');
@@ -25,7 +27,12 @@ const users = {
 //---------------------------------------//
 
 app.get('/', (req, res) => {
-  res.send('Hello!');
+  if(!req.cookies['user_id']) {
+    res.redirect('/login');
+    return;
+  }
+  if (req.cookies['user_id'] && users[req.cookies['user_id']])
+  res.redirect('/urls');
 });
 
 app.get('/urls.json', (req, res) => {
@@ -40,13 +47,10 @@ app.get('/hello', (req, res) => {
 app.get('/urls', (req, res) => {
   if (req.cookies['user_id'] && users[req.cookies['user_id']] === undefined) {
     res.clearCookie('user_id');
-    res.redirect('/login');
+    res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page.');
     return;
   }
-  if (!req.cookies['user_id']) {
-    res.render('urls_index', {urls: null , user: null});
-    return;
-  }
+
   let id = req.cookies['user_id'];
   const templateVars = {urls: urlsForUser(id), user: users[id]};
 
@@ -57,7 +61,7 @@ app.get('/urls', (req, res) => {
 //*RENDER New URLS this must be declared before /urls/:shortURL or the calls to /urls/new will be handled by /urls/:shortURL.
 app.get('/urls/new', (req, res) => {
   if (!req.cookies['user_id']) {
-    res.redirect('/login');
+    res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page.');
     return;
   }
   const templateVars = {user: users[req.cookies['user_id']]};
@@ -67,7 +71,7 @@ app.get('/urls/new', (req, res) => {
 
 //*RENDER urls_registration.
 app.get("/register", (req, res) => {
-  if (req.cookies['user_id']) {
+  if (users[req.cookies['user_id']]) {
     return  res.redirect('/urls');
   }
   res.render("urls_registration");
@@ -84,13 +88,12 @@ app.get('/login', (req,res) => {
 
 //*RENDER urls_show,ejs
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies['user_id']]};
-  const userUrls = Object.keys(urlsForUser(req.cookies['user_id']));
-  if (!req.cookies['user_id']) {
-    templateVars.user = null;
-    res.status(401).send('Loggin or resgitser before accesing');
+  if (!req.cookies['user_id'] || (req.cookies['user_id'] && users[req.cookies['user_id']] === undefined)) {
+    res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page');
     return;
   }
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies['user_id']]};
+  const userUrls = Object.keys(urlsForUser(req.cookies['user_id']));
   if (!userUrls.includes(req.params.shortURL)) {
     res.status(401).send('You are not autorized.');
   }
@@ -151,9 +154,10 @@ app.post('/register', (req, res) => {
   const userWithId = {
     id,
     email,
-    password,
+    password: bcrypt.hashSync(password, 10),
   };
   users[id] = userWithId;
+  console.log(users);
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
@@ -169,7 +173,7 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   if (typeof checkEmail(email) === 'object') {
     let key = checkEmail(email);
-    if (key.password === password) {
+    if (bcrypt.compareSync(password, key.password)) {
       let id = key.id;
       res.cookie('user_id', id);
       res.redirect('/urls');
@@ -197,18 +201,29 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
   }
+  res.status(401).send('ID not authorized to edit or delete this URL');
 });
 
 //POST from url_show.jes and deals with edditing the long URL ****************
 app.post("/urls/:shortURL", (req, res) => {
-  const userUrls = Object.keys(urlsForUser(req.cookies['user_id']));
-  if (userUrls.includes(req.params.shortURL)) {
+  const userUrls = urlsForUser(req.cookies['user_id']);
+  if (Object.keys(userUrls).includes(req.params.shortURL)) {
+    for (let url in userUrls) {
+      if(userUrls[url].longURL === req.body.updatedURL) {
+        res.redirect('/urls');
+        return;
+      }
+    }
     urlDatabase[req.params.shortURL] = {longURL: req.body.updatedURL, userID: req.cookies['user_id']};
     res.redirect('/urls');
+    return;
   }
-  if (!req.cookies['user_id'] || !userUrls.includes(req.params.shortURL)) {
+  if (!req.cookies['user_id'] || !Object.keys(userUrls).includes(req.params.shortURL)) {
     res.status(401).send('Not Authorized');
+    return;
   }
+  res.redirect('/urls')
+  return;
 });
 
 
