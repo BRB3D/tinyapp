@@ -13,10 +13,10 @@ app.set('view engine', 'ejs');
 /* app.use(cookieParser()); */
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(
-	cookieSession({
-		name: "session",
-		keys: ["I like security it's the best", "key2"],
-	})
+  cookieSession({
+    name: "session",
+    keys: ["I like security it's the best", "key2"],
+  })
 );
 
 // ----------------------- ShortURL & LongURL Database---------------//
@@ -54,7 +54,7 @@ app.get('/hello', (req, res) => {
 //*RENDER index page
 app.get('/urls', (req, res) => {
   if (req.session.user_id && users[req.session.user_id] === undefined) {
-   delete req.session.user_id;
+    delete req.session.user_id;
     res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page.');
     return;
   }
@@ -69,7 +69,7 @@ app.get('/urls', (req, res) => {
 //*RENDER New URLS this must be declared before /urls/:shortURL or the calls to /urls/new will be handled by /urls/:shortURL.
 app.get('/urls/new', (req, res) => {
   if (!req.session.user_id) {
-    res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page.');
+    res.redirect('/login');
     return;
   }
   const templateVars = {user: users[req.session.user_id]};
@@ -96,11 +96,14 @@ app.get('/login', (req,res) => {
 
 //*RENDER urls_show,ejs
 app.get("/urls/:shortURL", (req, res) => {
+  if (!Object.keys(urlDatabase).includes(req.params.shortURL)) {
+    res.status(401).send('That webpage is not on our database');
+    return;
+  }
   if (!req.session.user_id || (req.session.user_id && users[req.session.user_id] === undefined)) {
     res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page');
     return;
   }
-  console.log(`this is the database ${JSON.stringify(urlDatabase)}`, `This is databas and shortURL ${JSON.stringify(urlDatabase[req.params.shortURL])}`)
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.session.user_id]};
   const userUrls = Object.keys(urlsForUser(req.session.user_id, urlDatabase));
   if (!userUrls.includes(req.params.shortURL)) {
