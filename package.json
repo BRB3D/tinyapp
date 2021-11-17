@@ -1,8 +1,8 @@
 {
   "name": "tinyapp",
   "version": "1.0.0",
-  "description": "",
-  "main": "express_server.js",
+  "description": "ShortURLs are the future, and with this app will make it easier than ever to share your favorite websites with your peeps. You also have a the security that no one but you can access or edit your files. Please feel free to leave a comment and enjoy the app.",
+  "main": "npm start",
   "scripts": {
     "start": "./node_modules/.bin/nodemon express_server.js",
     "test": "mocha"
@@ -21,7 +21,6 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
-    "cookie-parser": "^1.4.5",
     "cookie-session": "^1.4.0",
     "ejs": "^3.1.6",
     "express": "^4.17.1"

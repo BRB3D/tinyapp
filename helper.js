@@ -3,7 +3,7 @@ const generateRandomString = function() {
 };
 
 const checkEmail = function(newEmail, userDatabase) {
-  for (let keys in userDatabase) {
+  for (const keys in userDatabase) {
     if (userDatabase[keys].email === newEmail) {
       return userDatabase[keys];
     }
@@ -13,7 +13,7 @@ const checkEmail = function(newEmail, userDatabase) {
 
 const urlsForUser = function(logID, urlDatabase) {
   const urls = {};
-  for (let keys in urlDatabase) {
+  for (const keys in urlDatabase) {
     if (urlDatabase[keys].userID === logID) {
       urls[keys] = urlDatabase[keys];
     }

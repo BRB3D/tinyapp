@@ -53,13 +53,17 @@ app.get('/hello', (req, res) => {
 
 //*RENDER index page
 app.get('/urls', (req, res) => {
+  if (!req.session.user_id) {
+    res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page.');
+    return;
+  }
   if (req.session.user_id && users[req.session.user_id] === undefined) {
     delete req.session.user_id;
     res.status(401).send('<a href="/login">Login</a> or <a href="/register">Register </a> before trying to access this page.');
     return;
   }
 
-  let id = req.session.user_id;
+  const id = req.session.user_id;
   const templateVars = {urls: urlsForUser(id, urlDatabase), user: users[id]};
 
   res.render('urls_index', templateVars);
@@ -82,16 +86,18 @@ app.get("/register", (req, res) => {
   if (users[req.session.user_id]) {
     return  res.redirect('/urls');
   }
-  res.render("urls_registration");
+  const templateVars = {user:null};
+  res.render("urls_registration",templateVars);
 });
 
 //*RENDER ursl_login
 app.get('/login', (req,res) => {
+ 
   if (req.session.user_id) {
     return  res.redirect('/urls');
   }
-
-  res.render('urls_login');
+  const templateVars = {user:null};
+  res.render('urls_login', templateVars);
 });
 
 //*RENDER urls_show,ejs
@@ -120,13 +126,13 @@ app.post("/urls", (req, res) => {
     res.status(400).send(`Dont be cheeky`);
     return;
   }
-  let id = req.session.user_id;
+  const id = req.session.user_id;
   const templateVars = urlsForUser(id, urlDatabase);
   let short = generateRandomString();
   while (Object.keys(templateVars).indexOf(short) > -1) {//while loop ensures a unique key
     short = generateRandomString();
   }
-  for (let keys in templateVars) {//if the value exists then the value from the database takes precedent.
+  for (const keys in templateVars) {//if the value exists then the value from the database takes precedent.
     if (templateVars[keys].longURL === req.body.longURL) {
       short = keys;
       return res.redirect(`/urls/${short}`);
@@ -138,7 +144,7 @@ app.post("/urls", (req, res) => {
 
 //RDIRECTS to Actual web page if it extists.
 app.get("/u/:shortURL", (req, res) => {
-  let long;
+  let long = null;
   const templateVars = urlDatabase;
   if (!templateVars[req.params.shortURL]) {
     res.status(400).send(`${req.params.shortURL} doesnt exist`);
@@ -183,10 +189,9 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (typeof checkEmail(email, users) === 'object') {
-    let key = checkEmail(email, users);
+    const key = checkEmail(email, users);
     if (bcrypt.compareSync(password, key.password)) {
-      let id = key.id;
-      req.session.user_id = id;
+      req.session.user_id = key.id;
       res.redirect('/urls');
       return;
     }
@@ -198,7 +203,7 @@ app.post('/login', (req, res) => {
 //POST from logout *****************
 app.post('/logout', (req, res) => {
   delete req.session.user_id;
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 //POST deletes the value from the Database ********************
@@ -222,7 +227,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const userUrls = urlsForUser(req.session.user_id, urlDatabase);
   if (Object.keys(userUrls).includes(req.params.shortURL)) {
-    for (let url in userUrls) {
+    for (const url in userUrls) {
       if (userUrls[url].longURL === req.body.updatedURL) {
         res.redirect('/urls');
         return;
