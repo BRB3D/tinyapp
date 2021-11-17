@@ -7,7 +7,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
   3. Sharing of short URL will redirect to the webpage regardless of the user status(loggind or not)
   4. Editing is available, and if you accidentaly edit a webpage or try to create a URL for the same webpage, fret not!! you will be shown your previous URL so repeating websites its a thing of the past.
   5. If anohter user or someone not logged in trys to edit your URLs, dont worry we can check and they wont be allowed. 
-  6 if you are logged in and accidentally go to the register or loginPage dont worry you will be properly redirected to your Index page
+  6. if you are logged in and accidentally go to the register or loginPage dont worry you will be properly redirected to your Index page.
 
 
   Below you can see some images of the finished app. 
